@@ -12,7 +12,7 @@ terminationGracePeriodSeconds: 60
 image:
   registry: docker.io   # Image for running container
   repository: nginx # Image for running container
-  tag: latet                 # Image tag version
+  tag: latest                 # Image tag version
   pullPolicy: Always      # Image pull policy
   port: 80              # Application port number
 
