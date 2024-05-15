@@ -1,0 +1,1 @@
+helm upgrade --install sample ./Helm/helm-chart-one/ -f Helm/helm-chart-one/values.yaml -n testing

@@ -1,0 +1,32 @@
+{{- if .Values.prometheus.monitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "common.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+{{ include "common.labels" . | indent 4 }}
+    {{- if .Values.prometheus.monitor.additionalLabels }}
+{{ toYaml .Values.prometheus.monitor.additionalLabels | indent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+{{ include "common.labels" . | indent 8 }}
+  endpoints:
+    {{- if .Values.service.enableHttp }}
+    - port: http
+      {{- if .Values.prometheus.monitor.path }}
+      path: {{ .Values.prometheus.monitor.path }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.service.enableHttps }}
+    - port: https
+      {{- if .Values.prometheus.monitor.path }}
+      path: {{ .Values.prometheus.monitor.path }}
+      {{- end }}
+    {{- end }}  
+      {{- if .Values.prometheus.monitor.honorLabels }}
+      honorLabels: true
+      {{- end }}
+{{- end }}

@@ -1,0 +1,94 @@
+{{- if eq .Values.rollout_vt_a.enabled "true" }}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    app: {{ include "common.fullname" . }}-a
+  name: {{ include "common.fullname" . }}-a
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ include "common.fullname" . }}-a
+spec:
+  type: {{ .Values.service.type }}
+  {{- if .Values.service.isHeadless }}
+  clusterIP: None
+  {{- end }}
+{{- if eq .Values.service.type "LoadBalancer" }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.service.loadBalancerSourceRanges | indent 4 }}
+{{- end }}
+  ports:
+    {{- $setNodePorts := (or (eq .Values.service.type "NodePort") (eq .Values.service.type "LoadBalancer")) }}
+    {{- if .Values.service.enableHttp }}
+    - name: http
+      port: {{ .Values.service.ports.http }}
+      protocol: TCP
+      targetPort: {{ .Values.service.http_port | default .Values.image.port }}
+      {{- if (and $setNodePorts (not (empty .Values.service.nodePorts.http))) }}
+      nodePort: {{ .Values.controller.service.nodePorts.http }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.service.enableHttps }}
+    - name: https
+      port: {{ .Values.service.ports.https }}
+      protocol: TCP
+      targetPort: {{ .Values.service.https_port | default .Values.image.port }}
+      {{- if (and $setNodePorts (not (empty .Values.service.nodePorts.https))) }}
+      nodePort: {{ .Values.service.nodePorts.https }}
+      {{- end }}
+    {{- end }}
+{{- if .Values.extraPorts }}
+{{ toYaml .Values.extraPorts | trim | indent 4 }}
+{{- end }}
+  selector:
+    app: {{ include "common.fullname" . }}-a
+{{- end }}
+
+
+---
+{{- if eq .Values.rollout_vt_b.enabled "true" }}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    app: {{ include "common.fullname" . }}-b
+  name: {{ include "common.fullname" . }}-b
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ include "common.fullname" . }}-b
+spec:
+  type: {{ .Values.service.type }}
+  {{- if .Values.service.isHeadless }}
+  clusterIP: None
+  {{- end }}
+{{- if eq .Values.service.type "LoadBalancer" }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.service.loadBalancerSourceRanges | indent 4 }}
+{{- end }}
+  ports:
+    {{- $setNodePorts := (or (eq .Values.service.type "NodePort") (eq .Values.service.type "LoadBalancer")) }}
+    {{- if .Values.service.enableHttp }}
+    - name: http
+      port: {{ .Values.service.ports.http }}
+      protocol: TCP
+      targetPort: {{ .Values.service.http_port | default .Values.image.port }}
+      {{- if (and $setNodePorts (not (empty .Values.service.nodePorts.http))) }}
+      nodePort: {{ .Values.controller.service.nodePorts.http }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.service.enableHttps }}
+    - name: https
+      port: {{ .Values.service.ports.https }}
+      protocol: TCP
+      targetPort: {{ .Values.service.https_port | default .Values.image.port }}
+      {{- if (and $setNodePorts (not (empty .Values.service.nodePorts.https))) }}
+      nodePort: {{ .Values.service.nodePorts.https }}
+      {{- end }}
+    {{- end }}
+{{- if .Values.extraPorts }}
+{{ toYaml .Values.extraPorts | trim | indent 4 }}
+{{- end }}
+  selector:
+    app: {{ include "common.fullname" . }}-b
+{{- end }}
+

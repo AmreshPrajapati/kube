@@ -1,0 +1,39 @@
+{{- if eq .Values.destinationrule.enabled false }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "common.fullname" . }}
+spec:
+  host: {{ include "common.fullname" . }}
+  subsets:
+    - name: {{ include "common.fullname" . }}
+      labels:
+        app: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ include "common.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+  trafficPolicy:
+    loadBalancer:
+      simple: {{ .Values.destinationrule.loadbalancer_type | default "ROUND_ROBIN"  }}
+      warmupDurationSecs: {{ .Values.destinationrule.warmupdurationsec }}
+{{- end }}
+
+
+---
+{{- if eq .Values.destinationrule.enabled false }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "common.fullname" . }}-canary
+spec:
+  host: {{ include "common.fullname" . }}-canary
+  subsets:
+    - name: {{ include "common.fullname" . }}-canary
+      labels:
+        app: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ include "common.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+  trafficPolicy:
+    loadBalancer:
+      simple: {{ .Values.destinationrule.loadbalancer_type | default "ROUND_ROBIN"  }}
+      warmupDurationSecs: {{ .Values.destinationrule.warmupdurationsec | default "120s" }}
+{{- end }}

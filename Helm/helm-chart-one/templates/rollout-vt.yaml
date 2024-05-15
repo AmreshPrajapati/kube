@@ -1,0 +1,303 @@
+{{- if eq .Values.rollout_vt_a.enabled "true" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "common.fullname" . }}-a
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ include "common.fullname" . }}-a
+spec:
+  revisionHistoryLimit: 3
+  strategy:
+{{ toYaml .Values.rollout_vt_a.strategy | indent 4 }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "common.fullname" . }}-a
+  template:
+    metadata:
+      {{- if .Values.rollout_vt_a.podannotation.enabled }}
+      annotations:
+      {{- with .Values.rollout_vt_a.podannotation.annotation }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.rollout_vt_a.podannotation.checksum.enabled }}
+        checksum/config: {{ include (print $.Template.BasePath "/app-configmap-vt.yaml") . | sha256sum }}
+      {{- end }}
+      {{- end }}
+      labels:
+        app: {{ include "common.fullname" . }}-a
+        {{- if .Values.istioRevision.enabled }}
+        istio.io/rev: {{ .Values.istioRevision.version | default "default" }}
+        {{- end }}
+    spec:
+    {{- if .Values.dnsconfig.enabled }}
+      dnsConfig:
+        options:
+          - name: attempts
+            value: "3"
+    {{- end }}
+    {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+    {{- end }}
+    {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "common.name" . }}
+    {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 60  }}
+      {{- if .Values.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.extraVolumes  | nindent 8  }}
+      {{- end }}
+      {{- if .Values.extraInitContainers }}
+      initContainers:
+        {{- toYaml  .Values.extraInitContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}
+          {{- if eq .Values.lifecycle.enabled true }}
+          lifecycle:
+            {{- toYaml .Values.lifecycle.lifecycleprestop | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- if .Values.resources }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+{{- if .Values.container }}
+{{- if .Values.container.command }}
+          command: {{ .Values.container.command }}
+{{- end }}
+{{- if .Values.container.args }}
+          args:
+{{- range $key, $value := .Values.container.args }}
+    {{- if $value }}
+          - --{{ $key }}={{ $value }}
+    {{- else }}
+          - --{{ $key }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.image.port }}
+              protocol: TCP
+{{- range $i, $port := .Values.extraPorts }}
+            - name: {{ $port.name }}
+              containerPort: {{ $port.targetPort }}
+              protocol: {{ default "TCP" $port.protocol }}
+{{- end }} 
+          {{- if .Values.configvalues }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "common.fullname" . }}
+          {{- end }}
+            {{- if .Values.secrets.enabled }}
+            - secretRef:
+                name: {{ include "common.fullname" . }}
+            {{- end }}
+            {{- if .Values.externalsecrets.enabled }}
+            - secretRef:
+                name: {{ include "common.fullname" . }}
+            {{- end }} 
+        {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml  .Values.extraVolumeMounts  | nindent 12  }}
+        {{- end }}  
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.health_url }}
+              port: {{ .Values.image.port }}
+              scheme: {{ .Values.livenessProbe.scheme }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          {{- end }}  
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.health_url }}
+              port: {{ .Values.image.port }}
+              scheme: {{ .Values.readinessProbe.scheme }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          {{- end }}
+      {{- if .Values.sidecar }}
+      {{- if  lt (len .Values.sidecar) 3 }}
+      {{- toYaml .Values.sidecar | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}
+
+
+---
+{{- if eq .Values.rollout_vt_b.enabled "true" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "common.fullname" . }}-b
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ include "common.fullname" . }}-b
+spec:
+  revisionHistoryLimit: 3
+  strategy:
+{{ toYaml .Values.rollout_vt_b.strategy | indent 4 }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "common.fullname" . }}-b
+  template:
+    metadata:
+      {{- if .Values.rollout_vt_b.podannotation.enabled }}
+      annotations:
+      {{- with .Values.rollout_vt_b.podannotation.annotation }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.rollout_vt_b.podannotation.checksum.enabled }}
+        checksum/config: {{ include (print $.Template.BasePath "/app-configmap-vt.yaml") . | sha256sum }}
+      {{- end }}
+      {{- end }}
+      labels:
+        app: {{ include "common.fullname" . }}-b
+        {{- if .Values.istioRevision.enabled }}
+        istio.io/rev: {{ .Values.istioRevision.version | default "default" }}
+        {{- end }}
+    spec:
+    {{- if .Values.dnsconfig.enabled }}
+      dnsConfig:
+        options:
+          - name: attempts
+            value: "3"
+    {{- end }}
+    {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+    {{- end }}
+    {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "common.name" . }}
+    {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 60  }}
+      {{- if .Values.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.extraVolumes  | nindent 8  }}
+      {{- end }}
+      {{- if .Values.extraInitContainers }}
+      initContainers:
+        {{- toYaml  .Values.extraInitContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}
+          {{- if eq .Values.lifecycle.enabled true }}
+          lifecycle:
+            {{- toYaml .Values.lifecycle.lifecycleprestop | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- if .Values.resources }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+{{- if .Values.container }}
+{{- if .Values.container.command }}
+          command: {{ .Values.container.command }}
+{{- end }}
+{{- if .Values.container.args }}
+          args:
+{{- range $key, $value := .Values.container.args }}
+    {{- if $value }}
+          - --{{ $key }}={{ $value }}
+    {{- else }}
+          - --{{ $key }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.image.port }}
+              protocol: TCP
+{{- range $i, $port := .Values.extraPorts }}
+            - name: {{ $port.name }}
+              containerPort: {{ $port.targetPort }}
+              protocol: {{ default "TCP" $port.protocol }}
+{{- end }}
+          {{- if .Values.configvalues }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "common.fullname" . }}
+          {{- end }}
+            {{- if .Values.secrets.enabled }}
+            - secretRef:
+                name: {{ include "common.fullname" . }}
+            {{- end }}
+            {{- if .Values.externalsecrets.enabled }}
+            - secretRef:
+                name: {{ include "common.fullname" . }}
+            {{- end }}
+        {{- if .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml  .Values.extraVolumeMounts  | nindent 12  }}
+        {{- end }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.health_url }}
+              port: {{ .Values.image.port }}
+              scheme: {{ .Values.livenessProbe.scheme }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.health_url }}
+              port: {{ .Values.image.port }}
+              scheme: {{ .Values.readinessProbe.scheme }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          {{- end }}
+      {{- if .Values.sidecar }}
+      {{- if  lt (len .Values.sidecar) 3 }}
+      {{- toYaml .Values.sidecar | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}

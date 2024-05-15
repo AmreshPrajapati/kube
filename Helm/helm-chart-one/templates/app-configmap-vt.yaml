@@ -1,0 +1,28 @@
+{{- if .Values.configvalues_a }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.fullname" . }}-a
+  labels:
+    app: {{ include "common.fullname" . }}-a
+  namespace: {{ .Values.namespace }}
+data:
+{{ range $k, $v :=  .Values.configvalues_a }}
+  {{$k}}: "{{$v}}"
+{{ end }}
+{{- end }}
+
+---
+{{- if .Values.configvalues_b }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.fullname" . }}-b
+  labels:
+    app: {{ include "common.name" . }}-b
+  namespace: {{ .Values.namespace }}
+data:
+{{ range $k, $v :=  .Values.configvalues_b }}
+  {{$k}}: "{{$v}}"
+{{ end }}
+{{- end }}

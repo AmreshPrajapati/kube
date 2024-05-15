@@ -1,0 +1,78 @@
+{{- if eq .Values.rollout_vt_b.enabled "true" }}
+{{- if eq .Values.destinationrule.enabled true }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "common.fullname" . }}-b
+spec:
+  host: {{ include "common.fullname" . }}-b
+  subsets:
+    - name: {{ include "common.fullname" . }}-b
+      labels:
+        app: {{ include "common.fullname" . }}-b
+  trafficPolicy:
+    loadBalancer:
+      simple: {{ .Values.destinationrule.loadbalancer_type | default "ROUND_ROBIN"  }}
+      warmupDurationSecs: {{ .Values.destinationrule.warmupdurationsec }}
+{{- end }}
+{{- end }}
+
+---
+{{- if eq .Values.rollout_vt_b.enabled "true" }}
+{{- if eq .Values.destinationrule.enabled true }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "common.fullname" . }}-b-canary
+spec:
+  host: {{ include "common.fullname" . }}-b-canary
+  subsets:
+    - name: {{ include "common.fullname" . }}-b-canary
+      labels:
+        app: {{ include "common.fullname" . }}-b
+  trafficPolicy:
+    loadBalancer:
+      simple: {{ .Values.destinationrule.loadbalancer_type | default "ROUND_ROBIN"  }}
+      warmupDurationSecs: {{ .Values.destinationrule.warmupdurationsec | default "120s" }}
+{{- end }}
+{{- end }}
+
+---
+{{- if eq .Values.rollout_vt_a.enabled "true" }}
+{{- if eq .Values.destinationrule.enabled true }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "common.fullname" . }}-a
+spec:
+  host: {{ include "common.fullname" . }}-a
+  subsets:
+    - name: {{ include "common.fullname" . }}-a
+      labels:
+        app: {{ include "common.fullname" . }}-a
+  trafficPolicy:
+    loadBalancer:
+      simple: {{ .Values.destinationrule.loadbalancer_type | default "ROUND_ROBIN"  }}
+      warmupDurationSecs: {{ .Values.destinationrule.warmupdurationsec }}
+{{- end }}
+{{- end }}
+
+---
+{{- if eq .Values.rollout_vt_b.enabled "true" }}
+{{- if eq .Values.destinationrule.enabled true }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "common.fullname" . }}-a-canary
+spec:
+  host: {{ include "common.fullname" . }}-a-canary
+  subsets:
+    - name: {{ include "common.fullname" . }}-a-canary
+      labels:
+        app: {{ include "common.fullname" . }}-b
+  trafficPolicy:
+    loadBalancer:
+      simple: {{ .Values.destinationrule.loadbalancer_type | default "ROUND_ROBIN"  }}
+      warmupDurationSecs: {{ .Values.destinationrule.warmupdurationsec | default "120s" }}
+{{- end }}
+{{- end }}
