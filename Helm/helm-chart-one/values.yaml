@@ -86,14 +86,20 @@ secrets:
   annotations: 
     avp_path: "DevOps/test/secrets"
     kv_version: "1"
-  values:
+  values: "red"
 
 localsecrets:
-  enabled: false
+  enabled: true
   annotations: 
     avp_path: "DevOps/test/secrets"
     kv_version: "1"
-  values:
+  values: 
+     username: dXNlcm5hbWU=  
+     password: cGFzc3dvcmQ= 
+
+    #   username: dXNlcm5hbWU=  
+    #  password: cGFzc3dvcmQ= 
+    
 
 externalsecrets:
   enabled: false
