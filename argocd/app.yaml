@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kestra
+spec:
+  destination:
+    name: ''
+    namespace: qa-kestra
+    server: https://kubernetes.default.svc
+  source:
+    path: deployments/qa/kestra/
+    repoURL: https://github.com/MaisonetteWorld/maisonette-artifacts.git
+    targetRevision: master
+    helm:
+      valueFiles:
+        - kestra.yaml
+  sources: []
+  project: default

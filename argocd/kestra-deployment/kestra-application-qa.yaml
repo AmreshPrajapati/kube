@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kestra
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://helm.kestra.io/  # Replace with the URL of Kestra's Helm chart
+    chart: kestra
+    targetRevision: 0.18.0  # Specify the chart version (e.g., latest available version)
+    helm:
+      valueFiles:
+        - https://raw.githubusercontent.com/MaisonetteWorld/maisonette-artifacts/refs/heads/master/deployments/qa/kestra/kestra.yaml?token=GHSAT0AAAAAAC2G7NGD6GCBS4OVET5E63IAZZPPOEA
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qa-kestra  # Namespace where Kestra will be deployed
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
